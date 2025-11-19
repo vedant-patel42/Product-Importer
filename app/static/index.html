@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acme Product Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div id="app" class="min-h-screen flex flex-col">
+        
+        <!-- Header -->
+        <nav class="bg-indigo-600 text-white p-4 shadow-lg">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold tracking-tight"><i class="fas fa-box-open mr-2"></i>Acme Inc.</h1>
+                <div class="space-x-4">
+                    <button @click="currentTab = 'upload'" :class="{'font-bold underline': currentTab === 'upload'}" class="hover:text-indigo-200">Upload</button>
+                    <button @click="currentTab = 'products'" :class="{'font-bold underline': currentTab === 'products'}" class="hover:text-indigo-200">Products</button>
+                    <button @click="currentTab = 'webhooks'" :class="{'font-bold underline': currentTab === 'webhooks'}" class="hover:text-indigo-200">Webhooks</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="container mx-auto p-6 flex-grow">
+            
+            <!-- STORY 1 & 1A: UPLOAD -->
+            <div v-if="currentTab === 'upload'" class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-6">Import Products CSV</h2>
+                
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-indigo-500 transition cursor-pointer relative">
+                    <input type="file" @change="handleFileUpload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".csv">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                    <p class="text-gray-600">Drag and drop or click to upload CSV</p>
+                    <p class="text-xs text-gray-400 mt-2">Max 500k records. Columns: sku, name, description</p>
+                </div>
+
+                <div v-if="uploading || uploadStatus" class="mt-6">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm font-medium text-indigo-700">{{ uploadStatusText }}</span>
+                        <span class="text-sm font-medium text-indigo-700">{{ uploadProgress }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
+                    </div>
+                    <div v-if="uploadError" class="mt-2 text-red-500 text-sm">
+                        <i class="fas fa-exclamation-circle"></i> {{ uploadError }}
+                    </div>
+                </div>
+            </div>
