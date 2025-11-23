@@ -126,6 +126,18 @@ def process_csv_upload(self, file_path):
         # self.update_state(state='FAILURE', meta={'error': str(e)})
         raise e
 
+@celery_app.task
+def delete_all_products_task():
+    loop = asyncio.get_event_loop()
+    
+    async def run_delete():
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("TRUNCATE TABLE products RESTART IDENTITY;"))
+            await session.commit()
+            
+    loop.run_until_complete(run_delete())
+    return "Deleted All"
+
 async def setup_db_context_if_needed():
     # Helper to ensure tables exist if worker starts before web (race condition handling)
     async with engine.begin() as conn:

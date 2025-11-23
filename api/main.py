@@ -14,14 +14,8 @@ import uuid
 import uvicorn
 from celery import Celery
 from pathlib import Path
-from worker import process_csv_upload
+from worker import celery_app, process_csv_upload, delete_all_products_task
 
-# Celery Configuration
-celery_app = Celery(
-    "main",
-    broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
-    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
-)
 
 app = FastAPI(Title="Acme Product Importer")
 
@@ -164,6 +158,13 @@ async def create_product(product: ProductCreate, db: AsyncSession = Depends(get_
     except Exception:
         await db.rollback()
         raise HTTPException(status_code=400, detail="SKU already exists")
+
+@app.delete("/api/products/bulk")
+async def delete_all_products():
+    # Async task for bulk delete
+    task = delete_all_products_task.delay()
+    return {"message": "Bulk delete initiated", "task_id": task.id}
+
 
 @app.delete("/api/products/{id}")
 async def delete_product(id: int, db: AsyncSession = Depends(get_db)):

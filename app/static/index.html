@@ -220,11 +220,20 @@
                         await api(`/products/${id}`, { method: 'DELETE' });
                         fetchProducts();
                     };
+
+                    const confirmBulkDelete = async () => {
+                        if (!confirm("Are you sure? This will delete ALL products. This cannot be undone.")) return;
+                        const res = await api('/products/bulk', { method: 'DELETE' });
+                        alert('Bulk delete started.');
+                        pollTask(res.task_id); // Reuse polling logic
+                    };
+
+
                     return {
                         currentTab, products, webhooks, page, searchQuery,
                         uploading, uploadProgress, uploadStatusText, uploadStatus, uploadError, 
                         handleFileUpload, fetchProducts, createProduct, showCreateModal, newProduct,
-                        deleteProduct
+                        deleteProduct, confirmBulkDelete
                         
                     };
                 }
