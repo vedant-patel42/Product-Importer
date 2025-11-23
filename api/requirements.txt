@@ -4,3 +4,13 @@ python-dotenv
 pydantic
 requests
 httpx
+sqlalchemy2-stubs
+asyncpg
+celery
+redis
+python-multipart
+pandas
+alembic
+psycopg2-binary
+greenlet
+sqlalchemy[asyncio]
