@@ -61,7 +61,7 @@ async def health_check():
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    with open("./../app/static/index2.html", "r", encoding="utf-8") as f:
+    with open("./../app/static/index.html", "r", encoding="utf-8") as f:
         return f.read()
 
 # 1. CSV Upload Endpoint
