@@ -18,7 +18,7 @@ from worker import process_csv_upload
 
 # Celery Configuration
 celery_app = Celery(
-    "main2",
+    "main",
     broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
     backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 )
