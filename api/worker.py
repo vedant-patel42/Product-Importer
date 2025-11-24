@@ -2,13 +2,20 @@ import os
 import asyncio
 import pandas as pd
 from celery import Celery
-from models import Product, Base
+from models import Product, Base, Webhook
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import text
+from sqlalchemy import text, select
 from sqlalchemy.exc import DBAPIError, IntegrityError
 import logging
+import httpx
+from datetime import datetime
+
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,12 +25,12 @@ logger = logging.getLogger(__name__)
 # Update the Celery configuration at the top of worker.py
 celery_app = Celery(
     "worker",
-    broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
-    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+    broker=os.getenv("CELERY_BROKER_URL"),
+    backend=os.getenv("CELERY_RESULT_BACKEND")
 )
 
 # # Database setup for Worker (Needs its own engine instance)
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://acme_user:acme_password@localhost/acme_db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -120,6 +127,18 @@ def process_csv_upload(self, file_path):
 
         # Clean up file
         os.remove(file_path)
+        
+        # Trigger webhook for import completion
+        webhook_payload = {
+            "event": "import_completed",
+            "import_stats": {
+                "total_rows": total_rows,
+                "processed_rows": total_rows,
+                "status": "completed"
+            }
+        }
+        loop.run_until_complete(trigger_webhooks("import_completed", webhook_payload))
+        
         return {'current': total_rows, 'total': total_rows, 'status': 'Import Complete'}
 
     except Exception as e:
@@ -142,3 +161,66 @@ async def setup_db_context_if_needed():
     # Helper to ensure tables exist if worker starts before web (race condition handling)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+@celery_app.task(bind=True, max_retries=3)
+def deliver_webhook(self, webhook_url, payload, event_type):
+    """
+    Deliver webhook payload to specified URL with retry logic.
+    Runs asynchronously to avoid blocking main application.
+    """
+    loop = asyncio.get_event_loop()
+    
+    async def send_webhook():
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = {
+                'Content-Type': 'application/json',
+                'X-Webhook-Event': event_type,
+                'X-Webhook-Timestamp': datetime.utcnow().isoformat()
+            }
+            
+            try:
+                response = await client.post(webhook_url, json=payload, headers=headers)
+                response.raise_for_status()
+                logger.info(f"Webhook delivered successfully to {webhook_url}")
+                return True
+                
+            except httpx.TimeoutException:
+                logger.warning(f"Webhook timeout for {webhook_url}")
+                raise
+            except httpx.RequestError as e:
+                logger.error(f"Webhook delivery failed to {webhook_url}: {e}")
+                raise
+            except httpx.HTTPStatusError as e:
+                logger.error(f"Webhook HTTP error {e.response.status_code} for {webhook_url}")
+                raise
+    
+    try:
+        return loop.run_until_complete(send_webhook())
+        
+    except Exception as exc:
+        # Retry with exponential backoff
+        if self.request.retries < self.max_retries:
+            countdown = 2 ** self.request.retries
+            logger.info(f"Retrying webhook delivery in {countdown}s (attempt {self.request.retries + 1})")
+            raise self.retry(countdown=countdown, exc=exc)
+        else:
+            logger.error(f"Webhook delivery failed after {self.max_retries} attempts: {exc}")
+            return False
+
+async def get_active_webhooks(event_type, session):
+    """Get all active webhooks for a specific event type."""
+    result = await session.execute(
+        select(Webhook).where(Webhook.event_type == event_type, Webhook.is_active == True)
+    )
+    return result.scalars().all()
+
+async def trigger_webhooks(event_type, payload):
+    """Trigger all active webhooks for a given event type."""
+    async with AsyncSessionLocal() as session:
+        webhooks = await get_active_webhooks(event_type, session)
+        
+        # Queue webhook delivery tasks
+        for webhook in webhooks:
+            deliver_webhook.delay(webhook.url, payload, event_type)
+            
+        logger.info(f"Queued {len(webhooks)} webhooks for event: {event_type}")

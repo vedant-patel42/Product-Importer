@@ -15,7 +15,7 @@ import uvicorn
 import httpx
 from celery import Celery
 from pathlib import Path
-from worker import celery_app, process_csv_upload, delete_all_products_task
+from worker import celery_app, process_csv_upload, delete_all_products_task, trigger_webhooks
 
 
 app = FastAPI(Title="Acme Product Importer")
@@ -155,6 +155,21 @@ async def create_product(product: ProductCreate, db: AsyncSession = Depends(get_
     try:
         await db.commit()
         await db.refresh(new_prod)
+        
+        # Trigger webhook for product creation
+        webhook_payload = {
+            "event": "product_created",
+            "product": {
+                "id": new_prod.id,
+                "sku": new_prod.sku,
+                "name": new_prod.name,
+                "description": new_prod.description,
+                "is_active": new_prod.is_active,
+                "created_at": new_prod.created_at.isoformat() if new_prod.created_at else None
+            }
+        }
+        await trigger_webhooks("product_created", webhook_payload)
+        
         return new_prod
     except Exception:
         await db.rollback()

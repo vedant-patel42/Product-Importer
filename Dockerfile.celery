@@ -1,0 +1,24 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY api/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY api/ ./api/
+COPY app/ ./app/
+COPY .env .
+
+# Create shared directory for file uploads
+RUN mkdir -p /app/shared
+
+# Command to run the Celery worker
+CMD ["celery", "-A", "api.worker.celery_app", "worker", "--loglevel=info"]

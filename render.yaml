@@ -1,0 +1,65 @@
+services:
+  # Web service
+  - type: web
+    name: product-importer
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: product-db
+          property: connectionString
+        sync: false
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: product-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: product-redis
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: product-redis
+          property: connectionString
+
+  # Celery worker
+  - type: worker
+    name: celery-worker
+    env: docker
+    dockerfilePath: ./Dockerfile.celery
+    dockerContext: .
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: product-db
+          property: connectionString
+        sync: false
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: product-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: product-redis
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: product-redis
+          property: connectionString
+
+databases:
+  - name: product-db
+    databaseName: acme_db
+    user: acme_user
+
+redis:
+  - name: product-redis
