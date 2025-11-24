@@ -61,5 +61,6 @@ databases:
     databaseName: acme_db
     user: acme_user
 
-redis:
-  - name: product-redis
+services:
+  - type: redis
+    name: product-redis
