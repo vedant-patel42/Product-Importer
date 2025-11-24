@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, BackgroundTasks, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,7 @@ import shutil
 import os
 import uuid
 import uvicorn
+import httpx
 from celery import Celery
 from pathlib import Path
 from worker import celery_app, process_csv_upload, delete_all_products_task
@@ -172,7 +173,72 @@ async def delete_product(id: int, db: AsyncSession = Depends(get_db)):
     await db.execute(query)
     await db.commit()
     return {"message": "Deleted"}
-     
+
+# 4. Webhook Management
+@app.get("/api/webhooks")
+async def get_webhooks(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Webhook))
+    return result.scalars().all()
+
+@app.post("/api/webhooks")
+async def create_webhook(webhook: WebhookCreate, db: AsyncSession = Depends(get_db)):
+    new_hook = Webhook(**webhook.dict())
+    db.add(new_hook)
+    await db.commit()
+    return new_hook
+
+@app.put("/api/webhooks/{id}")
+async def update_webhook(
+        id: int,
+        webhook: WebhookCreate,     # reuse schema, or define a separate one if you prefer partial updates
+        db: AsyncSession = Depends(get_db)
+):
+    query = select(Webhook).where(Webhook.id == id)
+    result = await db.execute(query)
+    hook = result.scalar_one_or_none()
+    if not hook:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    for key, value in webhook.dict().items():
+        setattr(hook, key, value)
+    await db.commit()
+    await db.refresh(hook)
+    return hook
+
+@app.delete("/api/webhooks/{id}")
+async def delete_webhook(id: int, db: AsyncSession = Depends(get_db)):
+    query = delete(Webhook).where(Webhook.id == id)
+    result = await db.execute(query)
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    await db.commit()
+    return {"message": "Deleted"}
+
+@app.patch("/api/webhooks/{id}/toggle")
+async def toggle_webhook(id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Webhook).where(Webhook.id == id))
+    hook = result.scalar_one_or_none()
+    if not hook:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    hook.is_active = not hook.is_active
+    await db.commit()
+    await db.refresh(hook)
+    return hook
+
+@app.post("/api/webhooks/test")
+async def test_webhook(url: str = Query(..., description="The URL to test")):
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.post(url, json={"test": True})
+        return {
+            "status_code": response.status_code,
+            "elapsed_ms": response.elapsed.total_seconds() * 1000,
+        }
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=400, detail=f"Request failed: {exc}")
+
+
 #Run Server
 if __name__ == "__main__":
-    uvicorn.run("api.main2:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
