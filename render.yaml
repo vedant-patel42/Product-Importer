@@ -11,7 +11,6 @@ services:
         fromDatabase:
           name: product-db
           property: connectionString
-        sync: false
       - key: CELERY_BROKER_URL
         fromService:
           type: redis
@@ -39,7 +38,6 @@ services:
         fromDatabase:
           name: product-db
           property: connectionString
-        sync: false
       - key: CELERY_BROKER_URL
         fromService:
           type: redis
@@ -59,6 +57,7 @@ services:
   # Redis service
   - type: redis
     name: product-redis
+    ipAllowList: []
 
 databases:
   - name: product-db
