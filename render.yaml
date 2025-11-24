@@ -56,11 +56,11 @@ services:
           name: product-redis
           property: connectionString
 
+  # Redis service
+  - type: redis
+    name: product-redis
+
 databases:
   - name: product-db
     databaseName: acme_db
     user: acme_user
-
-services:
-  - type: redis
-    name: product-redis
