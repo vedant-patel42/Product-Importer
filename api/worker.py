@@ -12,10 +12,10 @@ import logging
 import httpx
 from datetime import datetime
 
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
+# only load .env when running locally (not in container)
+if os.getenv("ENV", "production") != "production":
+    from dotenv import load_dotenv
+    load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

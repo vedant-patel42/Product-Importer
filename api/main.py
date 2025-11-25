@@ -15,7 +15,7 @@ import uvicorn
 import httpx
 from celery import Celery
 from pathlib import Path
-from worker import celery_app, process_csv_upload, delete_all_products_task, trigger_webhooks
+from worker import delete_all_products_task
 
 
 app = FastAPI(Title="Acme Product Importer")
@@ -81,6 +81,7 @@ async def upload_products(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     # Convert Path to string before passing to Celery task
+    from worker import process_csv_upload
     task = process_csv_upload.delay(str(file_path))
 
     return {"task_id": task.id, "message": "Upload processing started"}
@@ -89,6 +90,7 @@ async def upload_products(file: UploadFile = File(...)):
 # 2. Task Status Check (Polling)
 @app.get("/api/tasks/{task_id}")
 async def get_task_status(task_id: str):
+    from worker import celery_app
     task_result = celery_app.AsyncResult(task_id)
     
     response = {
@@ -168,6 +170,7 @@ async def create_product(product: ProductCreate, db: AsyncSession = Depends(get_
                 "created_at": new_prod.created_at.isoformat() if new_prod.created_at else None
             }
         }
+        from api.worker import trigger_webhooks
         await trigger_webhooks("product_created", webhook_payload)
         
         return new_prod
