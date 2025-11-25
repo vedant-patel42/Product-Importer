@@ -16,6 +16,7 @@ import httpx
 from celery import Celery
 from pathlib import Path
 from .worker import delete_all_products_task
+import asyncio
 
 
 app = FastAPI(Title="Acme Product Importer")
@@ -23,11 +24,18 @@ app = FastAPI(Title="Acme Product Importer")
 # Mount static files for the UI
 app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 
-# Startup: Create Tables
+async def create_tables_background():
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        import logging
+        logging.exception("Failed to initialize DB tables:", exc_info=e)
+
 @app.on_event("startup")
 async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Don’t block startup — run DB setup in background
+    asyncio.create_task(create_tables_background())
 
 
 # --- Pydantic Models ---
