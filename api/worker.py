@@ -31,6 +31,8 @@ celery_app = Celery(
 
 # # Database setup for Worker (Needs its own engine instance)
 DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set. Please set it in your environment or .env file.")
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

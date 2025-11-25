@@ -15,13 +15,13 @@ import uvicorn
 import httpx
 from celery import Celery
 from pathlib import Path
-from worker import delete_all_products_task
+from .worker import delete_all_products_task
 
 
 app = FastAPI(Title="Acme Product Importer")
 
 # Mount static files for the UI
-app.mount("/static", StaticFiles(directory="./../app/static"), name="static")
+app.mount("/static", StaticFiles(directory="./app/static"), name="static")
 
 # Startup: Create Tables
 @app.on_event("startup")
@@ -56,7 +56,7 @@ async def health_check():
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    with open("./../app/static/index.html", "r", encoding="utf-8") as f:
+    with open("./app/static/index.html", "r", encoding="utf-8") as f:
         return f.read()
 
 # 1. CSV Upload Endpoint
