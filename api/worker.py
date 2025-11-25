@@ -2,7 +2,7 @@ import os
 import asyncio
 import pandas as pd
 from celery import Celery
-from models import Product, Base, Webhook
+from .models import Product, Base, Webhook
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert

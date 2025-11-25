@@ -6,8 +6,8 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import select, delete, update
 from typing import List, Optional
 from pydantic import BaseModel
-from database import get_db, engine, Base
-from models import Product, Webhook
+from .database import get_db, engine, Base
+from .models import Product, Webhook
 import shutil
 import os
 import uuid
