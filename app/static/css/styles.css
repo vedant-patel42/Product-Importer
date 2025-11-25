@@ -1,0 +1,217 @@
+/* Custom styles for Product Importer Application */
+/* Most styling is handled by Tailwind CSS via CDN */
+
+/* Additional custom styles if needed */
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+.text-gray-800 {
+    color: #1f2937;
+}
+
+/* Custom animations and transitions */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+}
+
+/* Custom hover effects */
+.hover\:bg-gray-50:hover {
+    background-color: #f9fafb;
+}
+
+.hover\:text-indigo-200:hover {
+    color: #e0e7ff;
+}
+
+.hover\:text-indigo-600:hover {
+    color: #4f46e5;
+}
+
+.hover\:text-indigo-800:hover {
+    color: #3730a3;
+}
+
+.hover\:text-blue-600:hover {
+    color: #2563eb;
+}
+
+.hover\:text-blue-800:hover {
+    color: #1e40af;
+}
+
+.hover\:text-amber-600:hover {
+    color: #d97706;
+}
+
+.hover\:text-amber-800:hover {
+    color: #92400e;
+}
+
+.hover\:text-red-600:hover {
+    color: #dc2626;
+}
+
+.hover\:text-red-700:hover {
+    color: #b91c1c;
+}
+
+.hover\:text-red-800:hover {
+    color: #991b1b;
+}
+
+.hover\:text-red-500:hover {
+    color: #ef4444;
+}
+
+.hover\:text-red-700:hover {
+    color: #b91c1c;
+}
+
+.hover\:border-indigo-500:hover {
+    border-color: #6366f1;
+}
+
+/* Custom button hover effects */
+.hover\:bg-indigo-700:hover {
+    background-color: #4338ca;
+}
+
+.hover\:bg-green-700:hover {
+    background-color: #15803d;
+}
+
+.hover\:bg-red-700:hover {
+    background-color: #b91c1c;
+}
+
+/* Custom disabled state */
+.disabled\:opacity-50:disabled {
+    opacity: 0.5;
+}
+
+/* Custom text truncation */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Custom max width utilities */
+.max-w-xs {
+    max-width: 20rem;
+}
+
+.max-w-md {
+    max-width: 28rem;
+}
+
+.max-w-lg {
+    max-width: 32rem;
+}
+
+.max-w-xl {
+    max-width: 36rem;
+}
+
+.max-w-2xl {
+    max-width: 42rem;
+}
+
+.max-w-3xl {
+    max-width: 48rem;
+}
+
+.max-w-4xl {
+    max-width: 56rem;
+}
+
+.max-w-5xl {
+    max-width: 64rem;
+}
+
+.max-w-6xl {
+    max-width: 72rem;
+}
+
+.max-w-7xl {
+    max-width: 80rem;
+}
+
+.max-w-full {
+    max-width: 100%;
+}
+
+/* Custom spacing utilities */
+.space-x-2 > * + * {
+    margin-left: 0.5rem;
+}
+
+.space-x-4 > * + * {
+    margin-left: 1rem;
+}
+
+.space-y-2 > * + * {
+    margin-top: 0.5rem;
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+/* Custom flex utilities */
+.flex-1 {
+    flex: 1 1 0%;
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+/* Custom positioning utilities */
+.relative {
+    position: relative;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.fixed {
+    position: fixed;
+}
+
+.inset-0 {
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+}
+
+/* Custom cursor utilities */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Custom opacity utilities */
+.opacity-0 {
+    opacity: 0;
+}
+
+.opacity-50 {
+    opacity: 0.5;
+}
+
+.opacity-75 {
+    opacity: 0.75;
+}
+
+.opacity-100 {
+    opacity: 1;
+}
