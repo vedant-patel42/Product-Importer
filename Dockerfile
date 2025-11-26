@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY api/ ./api/
 COPY app/ ./app/
-#COPY .env .
+COPY .env .
 
 # Create shared directory for file uploads
 RUN mkdir -p /app/shared
